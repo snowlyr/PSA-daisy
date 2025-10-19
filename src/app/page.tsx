@@ -1,4 +1,14 @@
-import Image from "next/image";
+import Chat from "../components/Chat";
+
+export default function Home() {
+  return (
+    <main className="bg-gray-100 min-h-screen flex items-center justify-center">
+      <Chat />
+    </main>
+  );
+}
+
+/*import Image from "next/image";
 
 export default function Home() {
   return (
@@ -100,4 +110,4 @@ export default function Home() {
       </footer>
     </div>
   );
-}
+}*/
