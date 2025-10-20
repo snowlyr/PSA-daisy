@@ -1,11 +1,14 @@
 // index.ts (or index.js)
+import 'dotenv/config';
 import OpenAI from "openai";
 
+const { AZURE_OPENAI_API_KEY } = process.env;
+
 const client = new OpenAI({
-  apiKey: process.env.AZURE_OPENAI_API_KEY, // don't hardcode!
+  apiKey: AZURE_OPENAI_API_KEY, // don't hardcode!
   baseURL: "https://psacodesprint2025.azure-api.net/openai/deployments/gpt-4.1-nano",
   defaultHeaders: {
-    "api-key": process.env.AZURE_OPENAI_API_KEY, // required for Azure
+    "api-key": AZURE_OPENAI_API_KEY, // required for Azure
   },
   defaultQuery: {
     "api-version": "2025-01-01-preview",
