@@ -32,39 +32,53 @@ export default function Chat() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const sendMessage = () => {
-    if (!input.trim()) return;
+  const sendMessage = async () => {
+    if (loading || !input.trim()) return;
 
-    const userMessage: Message = { role: "user", content: input };
+    const trimmed = input.trim();
+    const userMessage: Message = { role: "user", content: trimmed };
+    const conversation = [...messages, userMessage];
+
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setLoading(true);
 
-    // Mock streaming response
-    const mockResponse = "This project is still in the kitchen.";
-    let index = 0;
+    try {
+      const response = await fetch(
+        process.env.NEXT_PUBLIC_CHAT_API || "/api/chat",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ messages: conversation }),
+        }
+      );
 
-    const interval = setInterval(() => {
-      if (index < mockResponse.length) {
-        setMessages((prev) => {
-          const updated = [...prev];
-          const last = updated[updated.length - 1];
-          if (last.role === "assistant") {
-            updated[updated.length - 1] = {
-              role: "assistant",
-              content: last.content + mockResponse[index],
-            };
-          } else {
-            updated.push({ role: "assistant", content: mockResponse[index] });
-          }
-          return updated;
-        });
-        index++;
-      } else {
-        clearInterval(interval);
-        setLoading(false);
+      if (!response.ok) {
+        const errorBody = await response.json().catch(() => ({}));
+        throw new Error(errorBody?.error || response.statusText);
       }
-    }, 20);
+
+      const data = await response.json();
+      const reply =
+        typeof data?.reply === "string"
+          ? data.reply
+          : "I wasn't able to generate a response.";
+
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: reply },
+      ]);
+    } catch (err: any) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: `**Error:** ${err?.message || "Unable to reach Daisy right now."}`,
+        },
+      ]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -229,7 +243,7 @@ export default function Chat() {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={sendMessage}
-          disabled={loading}
+          disabled={loading || !input.trim()}
           className={`flex-shrink-0 px-5 py-3 rounded-2xl font-semibold shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50 ${
             darkMode
               ? "text-white bg-gradient-to-r from-gray-700 to-black"
