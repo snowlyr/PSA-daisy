@@ -16,7 +16,7 @@ npm install
 
 ## PowerBI
 ```
-node powerBI.js
+node index.js
 ```
 
 ## Openai
